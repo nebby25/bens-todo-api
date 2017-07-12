@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 // Local imports
 var {mongoose} = require('./db/mongoose.js');
 var {Todo} = require('./models/todo.js');
@@ -112,7 +113,17 @@ app.get('/users/me', authenticate, (req, res)=>{
 });
 
 
-
+app.post('/users/login', (req, res) =>{
+    var email = req.body.email;
+    var password = req.body.password;
+    User.findByCredentials(email, password).then((user)=>{
+       return user.generateAuthToken().then((token)=>{
+            res.header('x-auth', token).send(user);
+        });
+    }).catch((e)=>{
+        res.status(400).send();
+    });
+});
 const port = process.env.PORT;
 app.listen(port, ()=>{
    console.log(`Started on port ${port}`); 
